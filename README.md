@@ -1,2 +1,2 @@
 # spark_code
-spark exercise codes
+This is the exercise codes for spark related projects
