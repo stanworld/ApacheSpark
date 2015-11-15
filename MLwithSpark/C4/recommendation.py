@@ -4,6 +4,8 @@ from pyspark import SparkContext
 from pyspark.mllib.recommendation import ALS
 from numpy import array
 from pyspark.mllib.recommendation import Rating
+from numpy import linalg as LA
+import numpy as np
 
 sc = SparkContext("local[2]", "Recommendation")
 
@@ -40,5 +42,32 @@ def f(x):
     print(x)
 
 topKRecs.map(lambda line: (titles[line.product], line.rating)).foreach(f)
+
+
+def cosineSimilarity( x, y):
+    rr=np.dot(x,y)/(np.linalg.norm(x)*np.linalg.norm(y))
+    return rr
+
+itemId=567
+itemfactor=model.productFeatures().lookup(itemId)[0].tolist()
+itemfactor = np.array(itemfactor)
+
+f(cosineSimilarity(itemfactor,itemfactor));
+
+def itemSimilarity( id, factor):
+    sim=cosineSimilarity(factor, itemfactor)
+    return (id, sim)
+## similarity scores for all the items when compared to item 567
+sims=model.productFeatures().map(lambda(id, factor): itemSimilarity(id, factor.tolist()))
+
+sortedItems = sims.top(10,key=lambda x: x[1])
+
+print(titles[itemId])
+
+sortedItems = sc.parallelize(sortedItems)
+
+sortedItems2=sortedItems.map(lambda x: (titles[x[0]],x[1]))
+
+sortedItems2.collect()
 
 print("Exercise done!\n")
