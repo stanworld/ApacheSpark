@@ -9,6 +9,10 @@ import numpy as np
 from operator import add
 import math
 
+
+from pyspark.mllib.evaluation import RegressionMetrics
+from pyspark.mllib.evaluation import RankingMetrics
+
 sc = SparkContext("local[2]", "Recommendation")
 
 rawData=sc.textFile("/home/stan/spark_data/ml-100k/u.data")
@@ -171,6 +175,23 @@ print("Mean Average Precision at K=10 %s" %MAPK)
 
 ## use evalution metrics within mllib
 
+predictedAndTrue=ratingsAndPredictions.map(lambda ((x,y), (p,q)): (p,q))
+
+regressionMetrics = RegressionMetrics(predictedAndTrue)
+
+print ("Mean squared error using mllib: %s" %regressionMetrics.meanSquaredError)
+
+predictedAndTrueForRanking = allRecs.join(userMovies).map(lambda (userId, (predicted,actualWithIds)): (map(lambda x: x[1] ,predicted), map(lambda x: int(x[1]),actualWithIds)))
+
+rankingMetrics= RankingMetrics(predictedAndTrueForRanking)
+
+print("Mean average precision using mllib = %s" %rankingMetrics.meanAveragePrecision)
+
+K=2000
+
+MAPK2000=allRecs.join(userMovies).map(lambda (userId, (predicted,actualWithIds)): fx(predicted, actualWithIds)).reduce(add)/allRecs.count()
+
+print("Mean average precision MAPK2000 = %s" %MAPK2000)
 
 
 print("Exercise done!\n")
