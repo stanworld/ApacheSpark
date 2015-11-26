@@ -27,24 +27,27 @@ def oneEvent (i):
          price =products[index][1]
          random.shuffle(names[0]);
          user=names[0][0];
-         return (user,product,price)
+         return ','.join((user,product,str(price)))
 
 def generateProductEvents ( n ):
         events=map(lambda i: oneEvent(i),range(0,n))
-        return events
+        return  events
 
 
 class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 
     def handle(self):
-            cur_thread = threading.current_thread()
-            print("Got client connected from: %s" %cur_thread.name)
-#        while 1:
-            time.sleep(1)
+        cur_thread = threading.current_thread()
+        print("Got client connected from: %s" %cur_thread.name)
+        while 1:
+            time.sleep(2)
             events=generateProductEvents(random.randint(5,10))
-#            data = self.request.recv(1024)
-            print("events sent after serialization:\n%s" %events)
-            data = pickle.dumps(events)
+
+            print("events:\n%s" %events)
+#            data = pickle.dumps(events)
+
+            data= '\n'.join(events)
+            data= data+'\n'
             self.request.sendall(data)
 
 
