@@ -19,7 +19,20 @@ ssc = StreamingContext(sc, 1)
 
 stream = ssc.socketTextStream("localhost", 9999)
 
-stream.pprint()
+#stream.pprint()
+
+events=stream.map(lambda line: line.split(",")).map(lambda fields: (fields[0],fields[1],fields[2]))
+
+# events is transformedDstream, not RDD
+events.pprint()
+
+def operations (time,rdd):
+    numPurchases=rdd.count()
+    print(time)
+    print(numPurchases)
+# rdd and time
+events.foreachRDD(lambda time,rdd:operations(time,rdd))
+
 
 ssc.start()             # Start the computation
 ssc.awaitTermination()  # Wait for the computation to terminate
