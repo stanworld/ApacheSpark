@@ -22,7 +22,7 @@ def oneSample (i):
         y = np.dot(w,x)
         xstr=map(lambda i: str(i),x.tolist())
         noisy = y+intercept
-        return '\t'.join((str(noisy),','.join(xstr)))
+        return ','.join((str(noisy),','.join(xstr)))
  #       return '\t'.join((str(noisy),','.join(x.tolist())))
 
 def generateNoisyData ( n ):
