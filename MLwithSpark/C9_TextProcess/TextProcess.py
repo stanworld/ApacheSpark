@@ -96,3 +96,37 @@ print(text.flatMap(lambda doc: tokenize(doc)).distinct().count())
 #Train a TF-IDF model
 
 
+from pyspark.mllib.feature import HashingTF
+
+from pyspark.mllib.feature import IDF
+
+from pyspark.mllib.linalg import SparseVector as SV
+
+dim=pow(2,18)
+
+hashingTF = HashingTF(dim)
+
+tf=hashingTF.transform(tokens)
+
+tf.cache()
+
+v=tf.first()
+
+print(v.size)
+print(v.values)
+print(v.indices)
+
+idf = IDF().fit(tf)
+
+tfidf=idf.transform(tf)
+
+v2=tfidf.first()
+
+print(v2.size)
+print(v2.values)
+print(v2.indices)
+
+minMaxVals = tfidf.map(lambda v: (min(v.values),max(v.values)))
+globalMin=minMaxVals.reduce(min)
+globalMax=minMaxVals.reduce(max)
+globalMinMax=(globalMin[0],globalMax[1])
