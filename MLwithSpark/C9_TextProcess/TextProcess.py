@@ -95,6 +95,7 @@ print(text.flatMap(lambda doc: tokenize(doc)).distinct().count())
 
 #Train a TF-IDF model
 
+tokens=text.map(lambda doc: tokenize(doc))
 
 from pyspark.mllib.feature import HashingTF
 
@@ -130,3 +131,17 @@ minMaxVals = tfidf.map(lambda v: (min(v.values),max(v.values)))
 globalMin=minMaxVals.reduce(min)
 globalMax=minMaxVals.reduce(max)
 globalMinMax=(globalMin[0],globalMax[1])
+
+###Using a TF-IDF model
+
+hockeyText= rdd.filter(lambda (file,text): file.find("hockey")!= -1)
+
+hockeyTF=hockeyText.mapValues(lambda doc: hashingTF.transform(tokenize(doc)))
+
+hockeyTfIdf=idf.transform(hockeyTF.map(lambda x: x[1]))
+
+hockey1=hockeyTfIdf.sample(True,0.1,42).first()
+
+hockey2=hockeyTfIdf.sample(True,0.1,43).first()
+
+cosineSim=hockey1.dot(hockey2)/(hockey1.norm(2)*hockey2.norm(2))
