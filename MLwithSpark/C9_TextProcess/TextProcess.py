@@ -191,7 +191,26 @@ print (accuracy)
 print (metrics.weightedFMeasure())
 
 
+#raw features
+
+rawTokens = rdd.map(lambda (file,text): text.split(" "))
+
+rawTF=rawTokens.map(lambda doc: hashingTF.transform(doc))
 
 
+rawTrain=newsgroups.zip(rawTF).map(lambda (topic,vector): LabeledPoint(newsgroupsMap(topic),vector))
 
+rawModel = NaiveBayes.train(rawTrain,0.1)
+
+# Word2Vec models
+
+from pyspark.mllib.feature import Word2Vec
+
+word2vec= Word2Vec()
+
+word2vec.setSeed(42)
+
+word2vecModel = word2vec.fit(tokens)
+
+word2vecModel.findSynonyms("hockey",20)
 
