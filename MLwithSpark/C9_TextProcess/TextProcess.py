@@ -145,3 +145,53 @@ hockey1=hockeyTfIdf.sample(True,0.1,42).first()
 hockey2=hockeyTfIdf.sample(True,0.1,43).first()
 
 cosineSim=hockey1.dot(hockey2)/(hockey1.norm(2)*hockey2.norm(2))
+
+### Training a text classifier using TF-IDF
+
+from pyspark.mllib.classification import NaiveBayes
+
+from pyspark.mllib.regression import LabeledPoint
+
+from pyspark.mllib.evaluation import MulticlassMetrics
+
+
+newsgroupsMap=newsgroups.distinct().zipWithIndex().collectAsMap()
+
+zipped = newsgroups.zip(tfidf)
+
+train=zipped.map(lambda (topic,vector): LabeledPoint(newsgroupsMap[topic],vector))
+
+model=NaiveBayes.train(train,0.1)
+
+testPath = "/home/stan/spark_code/MLwithSpark/C9_TextProcess/20news-bydate-test/*"
+
+testRDD = sc.wholeTextFiles(testPath)
+
+testnewsgroups=testRDD.map(lambda (file,text): file.split("/")[-2])
+
+testLabels = testnewsgroups.map(lambda x:newsgroupsMap[x])
+
+
+testTf = testRDD.map(lambda (file,text): hashingTF.transform(tokenize(text)))
+
+testTfIdf= idf.transform(testTf)
+
+zippedTest = testLabels.zip(testTfIdf)
+
+test = zippedTest.map(lambda (topic,vector): LabeledPoint(topic,vector))
+
+predictionAndLabel = test.map(lambda x: (model.predict(x.features),x.label))
+
+accuracy = 1.0*predictionAndLabel.filter(lambda x: x[0]==x[1]).count()/test.count()
+
+metrics= MulticlassMetrics(predictionAndLabel)
+
+print (accuracy)
+
+print (metrics.weightedFMeasure())
+
+
+
+
+
+
